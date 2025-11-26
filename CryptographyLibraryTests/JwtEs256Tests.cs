@@ -1,7 +1,7 @@
 ﻿using System.Text.Json;
-using JwtLib;
+using CryptographyLibrary;
 
-namespace JwtLibTests;
+namespace CryptographyLibraryTests;
 
 public class JwtEs256Tests
 {

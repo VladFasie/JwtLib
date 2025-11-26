@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JwtLib", "JwtLib/JwtLib.csproj", "{4809DF8E-3E0E-462C-AAD1-AA26DFA75BC9}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CryptographyLibrary", "CryptographyLibrary/CryptographyLibrary.csproj", "{4809DF8E-3E0E-462C-AAD1-AA26DFA75BC9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JwtLibTests", "JwtLibTests\JwtLibTests.csproj", "{9919B2D5-CD92-4435-82A0-A05A85A4C411}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CryptographyLibraryTests", "CryptographyLibraryTests/CryptographyLibraryTests.csproj", "{9919B2D5-CD92-4435-82A0-A05A85A4C411}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

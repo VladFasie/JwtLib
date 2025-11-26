@@ -2,7 +2,7 @@
 using System.Text;
 using System.Text.Json;
 
-namespace JwtLib;
+namespace CryptographyLibrary;
 
 public class JwtEs256
 {
@@ -47,7 +47,7 @@ public class JwtEs256
         return $"{headerBase64}.{payloadBase64}.{signatureBase64}";
     }
 
-    public bool Verify(string token, out string payload)
+    public bool Verify(string token, out string? payload)
     {
         payload = null;
         

@@ -5,7 +5,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <IsPackable>false</IsPackable>
-        <RootNamespace>JwtLibTests</RootNamespace>
+        <RootNamespace>CryptographyLibraryTests</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
@@ -20,7 +20,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\JwtLib\JwtLib.csproj" />
+      <ProjectReference Include="..\CryptographyLibrary\CryptographyLibrary.csproj" />
     </ItemGroup>
 
 </Project>

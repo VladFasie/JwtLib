@@ -4,7 +4,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <RootNamespace>JwtLib</RootNamespace>
+    <RootNamespace>CryptographyLibrary</RootNamespace>
   </PropertyGroup>
 
 </Project>
