@@ -9,27 +9,27 @@ public class JwtWithEncryptedPayloadTests
     // Models for the payload
     public class Limits
     {
-        public int TransactionsPerDay { get; set; }
-        public int TransactionsPerMonth { get; set; }
-        public decimal AmountPerTransaction { get; set; }
-        public decimal AmountPerDay { get; set; }
-        public decimal AmountPerMonth { get; set; }
+        public int TransactionsPerDay { get; init; }
+        public int TransactionsPerMonth { get; init; }
+        public decimal AmountPerTransaction { get; init; }
+        public decimal AmountPerDay { get; init; }
+        public decimal AmountPerMonth { get; init; }
     }
 
     public class SensitivePayload
     {
-        public decimal Balance { get; set; }
-        public decimal LockedBalance { get; set; }
-        public Limits Limits { get; set; }
+        public decimal Balance { get; init; }
+        public decimal LockedBalance { get; init; }
+        public required Limits Limits { get; init; }
     }
 
     public class TokenPayload
     {
-        public string Sub { get; set; }
-        public string Name { get; set; }
-        public long Iat { get; set; }
-        public long Exp { get; set; }
-        public string EncryptedData { get; set; }
+        public string? Sub { get; init; }
+        public string? Name { get; init; }
+        public long Iat { get; init; }
+        public long Exp { get; init; }
+        public string? EncryptedData { get; init; }
     }
 
     [Fact]
@@ -51,8 +51,8 @@ public class JwtWithEncryptedPayloadTests
         using var userB = new EncryptorEcdh();
         var userBPublicKeyPem = userB.ExportPublicKeyPem();
 
-        // A third party (verifier) who only has issuer's public key
-        var verifier = new JwtEs256(issuer.ExportPrivateKeyPem(), issuerPublicKeyPem);
+        // A third party (verifier) who ONLY has issuer's PUBLIC key
+        var verifier = JwtEs256.CreateVerifier(issuerPublicKeyPem);
 
         // ============================================================
         // ISSUER: Create sensitive payloads for each user
@@ -214,9 +214,9 @@ public class JwtWithEncryptedPayloadTests
         using var user = new EncryptorEcdh();
         using var thirdParty = new EncryptorEcdh(); // Third party has their own keys
 
-        // Create a verifier with only issuer's public key
-        var verifierOnlyPublic = new JwtEs256(issuer.ExportPrivateKeyPem(), issuer.ExportPublicKeyPem());
-
+        // Create a verifier with ONLY issuer's public key
+        var verifier = JwtEs256.CreateVerifier(issuer.ExportPublicKeyPem());
+        
         // Issuer creates token with encrypted data for user
         var sensitiveData = new SensitivePayload
         {
@@ -249,7 +249,7 @@ public class JwtWithEncryptedPayloadTests
         var token = issuer.Create(JsonSerializer.Serialize(tokenPayload));
 
         // Third party CAN verify the token
-        Assert.True(verifierOnlyPublic.Verify(token, out var payload));
+        Assert.True(verifier.Verify(token, out var payload));
 
         var parsed = JsonSerializer.Deserialize<TokenPayload>(payload);
         Assert.Equal("user-123", parsed.Sub);
@@ -379,31 +379,37 @@ public class JwtWithEncryptedPayloadTests
         });
 
         // 5. Any service can verify tokens with issuer's public key
-        var verifier = new JwtEs256(issuer.ExportPrivateKeyPem(), issuerPublicKey);
+        var verifier = JwtEs256.CreateVerifier(issuerPublicKey);
 
         Assert.True(verifier.Verify(aliceToken, out var alicePayloadJson));
         Assert.True(verifier.Verify(bobToken, out var bobPayloadJson));
 
         // 6. Alice accesses her token
+        Assert.NotNull(alicePayloadJson);
         var alicePayload = JsonSerializer.Deserialize<TokenPayload>(alicePayloadJson);
+        Assert.NotNull(alicePayload);
         Assert.Equal("alice", alicePayload.Sub);
         Assert.Equal("Alice Smith", alicePayload.Name);
 
         var aliceAccountData = JsonSerializer.Deserialize<SensitivePayload>(
             alice.Decrypt(alicePayload.EncryptedData)
         );
+        Assert.NotNull(aliceAccountData);
         Assert.Equal(1500.00m, aliceAccountData.Balance);
         Assert.Equal(200.00m, aliceAccountData.LockedBalance);
         Assert.Equal(10, aliceAccountData.Limits.TransactionsPerDay);
 
         // 7. Bob accesses his token
+        Assert.NotNull(bobPayloadJson);
         var bobPayload = JsonSerializer.Deserialize<TokenPayload>(bobPayloadJson);
+        Assert.NotNull(bobPayload);
         Assert.Equal("bob", bobPayload.Sub);
         Assert.Equal("Bob Jones", bobPayload.Name);
 
         var bobAccountData = JsonSerializer.Deserialize<SensitivePayload>(
             bob.Decrypt(bobPayload.EncryptedData)
         );
+        Assert.NotNull(bobAccountData);
         Assert.Equal(250.50m, bobAccountData.Balance);
         Assert.Equal(0.00m, bobAccountData.LockedBalance);
         Assert.Equal(3, bobAccountData.Limits.TransactionsPerDay);

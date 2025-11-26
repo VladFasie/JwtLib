@@ -6,9 +6,12 @@ namespace CryptographyLibrary;
 
 public class JwtEs256
 {
-    private readonly ECDsa _privateKey;
+    private readonly ECDsa? _privateKey;
     private readonly ECDsa _publicKey;
 
+    /// <summary>
+    /// Creates a new instance with auto-generated keys.
+    /// </summary>
     public JwtEs256()
     {
         _privateKey = ECDsa.Create(ECCurve.NamedCurves.nistP256);
@@ -16,23 +19,41 @@ public class JwtEs256
         _publicKey.ImportParameters(_privateKey.ExportParameters(false));
     }
 
+    /// <summary>
+    /// Creates an instance from PEM-encoded keys.
+    /// </summary>
     public JwtEs256(string privateKeyPem, string publicKeyPem)
     {
         _privateKey = ECDsa.Create();
         _privateKey.ImportFromPem(privateKeyPem);
-        
+
         _publicKey = ECDsa.Create();
         _publicKey.ImportFromPem(publicKeyPem);
     }
 
-    public JwtEs256(ECDsa privateKey, ECDsa publicKey)
+    private JwtEs256(ECDsa? privateKey, ECDsa publicKey)
     {
         _privateKey = privateKey;
         _publicKey = publicKey;
     }
 
+    /// <summary>
+    /// Creates a verify-only instance from a public key PEM.
+    /// This instance can verify tokens but cannot create them.
+    /// </summary>
+    public static JwtEs256 CreateVerifier(string publicKeyPem)
+    {
+        var publicKey = ECDsa.Create();
+        publicKey.ImportFromPem(publicKeyPem);
+
+        return new JwtEs256(null, publicKey);
+    }
+
     public string Create(string payload)
     {
+        if (_privateKey == null)
+            throw new InvalidOperationException("Cannot create tokens with a verify-only instance. Use the full constructor with a private key.");
+
         var header = new { alg = "ES256", typ = "JWT" };
         var headerJson = JsonSerializer.Serialize(header);
         var headerBase64 = Base64UrlEncode(Encoding.UTF8.GetBytes(headerJson));
@@ -40,7 +61,7 @@ public class JwtEs256
 
         var dataToSign = $"{headerBase64}.{payloadBase64}";
         var dataBytes = Encoding.UTF8.GetBytes(dataToSign);
-        
+
         var signature = _privateKey.SignData(dataBytes, HashAlgorithmName.SHA256);
         var signatureBase64 = Base64UrlEncode(signature);
 
@@ -50,7 +71,7 @@ public class JwtEs256
     public bool Verify(string token, out string? payload)
     {
         payload = null;
-        
+
         var parts = token.Split('.');
         if (parts.Length != 3)
             return false;
@@ -63,8 +84,8 @@ public class JwtEs256
         {
             var headerJson = Encoding.UTF8.GetString(Base64UrlDecode(headerBase64));
             var headerDoc = JsonDocument.Parse(headerJson);
-            
-            if (!headerDoc.RootElement.TryGetProperty("alg", out var algElement) || 
+
+            if (!headerDoc.RootElement.TryGetProperty("alg", out var algElement) ||
                 algElement.GetString() != "ES256")
                 return false;
 
@@ -86,6 +107,9 @@ public class JwtEs256
 
     public string ExportPrivateKeyPem()
     {
+        if (_privateKey == null)
+            throw new InvalidOperationException("No private key available.");
+
         return _privateKey.ExportECPrivateKeyPem();
     }
 

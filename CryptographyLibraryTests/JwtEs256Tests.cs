@@ -221,4 +221,50 @@ public class JwtEs256Tests
 
         return System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(base64));
     }
+    
+    [Fact]
+    public void VerifyOnlyInstance_CannotCreateTokens()
+    {
+        var issuer = new JwtEs256();
+        var verifier = JwtEs256.CreateVerifier(issuer.ExportPublicKeyPem());
+
+        Assert.Throws<InvalidOperationException>(() =>
+            verifier.Create("{\"test\":\"payload\"}")
+        );
+    }
+
+    [Fact]
+    public void VerifyOnlyInstance_CannotExportPrivateKey()
+    {
+        var issuer = new JwtEs256();
+        var verifier = JwtEs256.CreateVerifier(issuer.ExportPublicKeyPem());
+
+        Assert.Throws<InvalidOperationException>(() =>
+            verifier.ExportPrivateKeyPem()
+        );
+    }
+
+    [Fact]
+    public void VerifyOnlyInstance_CanVerifyValidToken()
+    {
+        var issuer = new JwtEs256();
+        var verifier = JwtEs256.CreateVerifier(issuer.ExportPublicKeyPem());
+
+        var token = issuer.Create("{\"sub\":\"123\"}");
+
+        Assert.True(verifier.Verify(token, out var payload));
+        Assert.Contains("123", payload);
+    }
+
+    [Fact]
+    public void VerifyOnlyInstance_RejectsInvalidToken()
+    {
+        var issuer = new JwtEs256();
+        var fakeIssuer = new JwtEs256();
+        var verifier = JwtEs256.CreateVerifier(issuer.ExportPublicKeyPem());
+
+        var fakeToken = fakeIssuer.Create("{\"sub\":\"123\"}");
+
+        Assert.False(verifier.Verify(fakeToken, out _));
+    }
 }
